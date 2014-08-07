@@ -19,6 +19,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     if (opcode == 0x00E0) {
         /* Clears the screen. */
         memset((*CPU).display, 0, sizeof((*CPU).display));
+        (*CPU).draw = 1;
     }
 
     else if (opcode == 0x00EE) {
@@ -184,7 +185,26 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         /* Sprites stored in CPU at location in index register (I), maximum 8bits wide.
            Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1
            otherwise it is zero. All drawing is XOR drawing (e.g. it toggles the screen pixels) */
-        NI("Sprites stored in CPU at location in index register (I), maximum 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (e.g. it toggles the screen pixels)");
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vy = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
+        uint8_t height = opcode & 0x000F;
+        uint8_t pixel;
+        int yline, xline;
+
+        (*CPU).registers.v[0xF] = 0;
+        for (yline=0;yline<height;yline++) {
+            pixel = (*CPU).memory[(*CPU).registers.I + yline];
+            for (xline=0;xline<8;xline++) {
+                if ((pixel & (0x80 >> xline)) != 0) {
+                    if((*CPU).display[(vx + xline + ((vy + yline) * 64))] == 1) {
+                        (*CPU).registers.v[0xF] = 1;
+                    }
+                    (*CPU).display[vx + xline + ((vy + yline) * 64)] ^= 1;
+                }
+            }
+        }
+
+        (*CPU).draw = 1;
     }
 
     else if ((opcode & 0xF0FF) == 0xE09E) {
@@ -199,7 +219,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF007) {
         /* Sets VX to the value of the delay timer. */
-        NI("Sets VX to the value of the delay timer.");
+        (*CPU).registers.v[(opcode & 0xF0FF) >> 8] = (*CPU).delay_timer;
     }
 
     else if ((opcode & 0xF0FF) == 0xF00A) {
@@ -209,12 +229,12 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF015) {
         /* Sets the delay timer to VX. */
-        NI("Sets the delay timer to VX.");
+        (*CPU).delay_timer = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
     }
 
     else if ((opcode & 0xF0FF) == 0xF018) {
         /* Sets the sound timer to VX. */
-        NI("Sets the sound timer to VX.");
+        (*CPU).sound_timer = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
     }
 
     else if ((opcode & 0xF0FF) == 0xF01E) {
@@ -224,7 +244,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF029) {
         /* Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font. */
-        NI("Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.");
+        (*CPU).registers.I = (*CPU).memory[(*CPU).registers.v[(opcode & 0xF0FF) >> 8]];
     }
 
     else if ((opcode & 0xF0FF) == 0xF033) {

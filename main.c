@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include "opcodes.h"
 #include "cpu.h"
 
@@ -19,8 +18,6 @@ int main(int argc, char *argv[]) {
         printf("cannot open file %s\n", argv[0]);
         return 0;
     }
-
-    memset(&CPU, '\0', sizeof(CPU));
 
     cpu_init(f, &CPU);
 

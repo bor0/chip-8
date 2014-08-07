@@ -18,7 +18,7 @@ struct cpu {
     uint8_t memory[0x0FFF];
 
     /* Display resolution is 64×32 pixels, and color is monochrome. */
-    uint8_t display[64][32];
+    uint8_t display[2048];
 
     /* The original 1802 version allocated 48 bytes for up to 12 levels of nesting; modern implementations normally have at least 16 levels. */
     uint16_t stack[16];
@@ -28,6 +28,12 @@ struct cpu {
 
     /* Halt variable */
     int halt;
+
+    /* Draw flag */
+    int draw;
+
+    /* Timers */
+    int sound_timer, delay_timer;
 
 };
 
