@@ -183,13 +183,13 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         uint8_t pixel;
         uint16_t yline, xline;
 
-        (*CPU).registers.v[0xF] = 0;
+        (*CPU).registers.v[15] = 0;
         for (yline=0;yline<height;yline++) {
             pixel = (*CPU).memory[(*CPU).registers.I + yline];
             for (xline=0;xline<8;xline++) {
                 if ((pixel & (0x80 >> xline)) != 0) {
-                    if((*CPU).display[(vx + xline + ((vy + yline) * 64))] == 1) {
-                        (*CPU).registers.v[0xF] = 1;
+                    if ((*CPU).display[(vx + xline + ((vy + yline) * 64))] == 1) {
+                        (*CPU).registers.v[15] = 1;
                     }
                     (*CPU).display[vx + xline + ((vy + yline) * 64)] ^= 1;
                 }
