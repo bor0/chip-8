@@ -23,7 +23,7 @@ const uint8_t chip8_fontset[80] = {
 };
 
 void cpu_init(FILE *t, struct cpu *CPU) {
-    int i = 0;
+    uint16_t i = 0;
 
     memset(CPU, '\0', sizeof(struct cpu));
     (*CPU).registers.PC = 0x200;

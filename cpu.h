@@ -1,6 +1,7 @@
 #ifndef CPU_H
 #define CPU_H
 #include <stdint.h>
+#include <stdio.h>
 
 struct cpu {
     struct {
@@ -23,18 +24,20 @@ struct cpu {
     /* The original 1802 version allocated 48 bytes for up to 12 levels of nesting; modern implementations normally have at least 16 levels. */
     uint16_t stack[16];
 
-    /* Stack pointer */
+    /* Key presses, 1 if pressed, 0 if not. */
+    uint8_t key[16];
+
+    /* Stack pointer. */
     uint16_t SP;
 
-    /* Halt variable */
-    int halt;
+    /* Halt variable. */
+    uint8_t halt;
 
-    /* Draw flag */
-    int draw;
+    /* Draw flag. */
+    uint8_t draw;
 
-    /* Timers */
-    int sound_timer, delay_timer;
-
+    /* Timers. */
+    uint8_t sound_timer, delay_timer;
 };
 
 void cpu_init(FILE *, struct cpu *);

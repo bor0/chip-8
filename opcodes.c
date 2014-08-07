@@ -12,8 +12,6 @@ void NI(char *str) {
 }
 
 void parse_opcode(struct cpu *CPU, uint16_t opcode) {
-    int i;
-
     printf("[PC = %.4X] [OPCODE: %.4X] ", (*CPU).registers.PC, opcode);
 
     if (opcode == 0x00E0) {
@@ -107,8 +105,8 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x8004) {
         /* Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't. */
-        int vy = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
-        int vx = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
+        uint8_t vy = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
 
         if (vx + vy > 0xFFFF) {
             (*CPU).registers.v[15] = 1;
@@ -121,8 +119,8 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x8005) {
         /* VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't. */
-        int vy = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
-        int vx = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
+        uint8_t vy = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
 
         if (vx - vy < 0) {
             (*CPU).registers.v[15] = 0;
@@ -141,8 +139,8 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x8007) {
         /* Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't. */
-        int vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
-        int vy = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vy = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
 
         if (vy - vx < 0) {
             (*CPU).registers.v[15] = 0;
@@ -189,7 +187,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         uint8_t vy = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
         uint8_t height = opcode & 0x000F;
         uint8_t pixel;
-        int yline, xline;
+        uint16_t yline, xline;
 
         (*CPU).registers.v[0xF] = 0;
         for (yline=0;yline<height;yline++) {
@@ -209,12 +207,18 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xE09E) {
         /* Skips the next instruction if the key stored in VX is pressed. */
-        NI("Skips the next instruction if the key stored in VX is pressed.");
+        uint8_t vx = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
+        if ((*CPU).key[vx]) {
+            (*CPU).registers.PC += 2;
+        }
     }
 
     else if ((opcode & 0xF0FF) == 0xE0A1) {
         /* Skips the next instruction if the key stored in VX isn't pressed. */
-        NI("Skips the next instruction if the key stored in VX isn't pressed.");
+        uint8_t vx = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
+        if (!(*CPU).key[vx]) {
+            (*CPU).registers.PC += 2;
+        }
     }
 
     else if ((opcode & 0xF0FF) == 0xF007) {
@@ -224,7 +228,19 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF00A) {
         /* A key press is awaited, and then stored in VX. */
-        NI("A key press is awaited, and then stored in VX.");
+        uint8_t keypress = 0, i;
+
+        for (i=0;i<16;i++) {
+            if ((*CPU).key[i]) {
+                (*CPU).registers.v[(opcode & 0x0F00) >> 8] = i;
+                keypress = 1;
+            }
+        }
+
+        /* No keypress, repeat cycle */
+        if (!keypress) {
+            (*CPU).registers.PC -= 2;
+        }
     }
 
     else if ((opcode & 0xF0FF) == 0xF015) {
@@ -253,7 +269,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
            significant digit at I plus 2. (In other words, take the decimal representation of VX,
            place the hundreds digit in CPU at location in I, the tens digit at location I+1,
            and the ones digit at location I+2.) */
-        int vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
         (*CPU).memory[(*CPU).registers.I] = vx / 100;
         (*CPU).memory[(*CPU).registers.I] = vx / 10 % 10;
         (*CPU).memory[(*CPU).registers.I] = vx % 10;
@@ -261,6 +277,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF055) {
         /* Stores V0 to VX in CPU starting at address I. */
+        uint8_t i;
         for (i=0;i<16;i++) {
              (*CPU).memory[(*CPU).registers.I + i] = (*CPU).registers.v[i];
         }
@@ -268,6 +285,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF065) {
         /* Fills V0 to VX with values from CPU starting at address I. */
+        uint8_t i;
         for (i=0;i<16;i++) {
             (*CPU).registers.v[i] = (*CPU).memory[(*CPU).registers.I + i];
         }
