@@ -43,7 +43,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         }
         (*CPU).stack[(*CPU).registers.SP] = (*CPU).registers.PC;
         (*CPU).registers.SP++;
-        (*CPU).registers.PC = (opcode & 0x0FFF);
+        (*CPU).registers.PC = opcode & 0x0FFF;
     }
 
     else if ((opcode & 0xF000) == 0x3000) {
@@ -128,7 +128,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     else if ((opcode & 0xF00F) == 0x8006) {
         /* Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift. */
         (*CPU).registers.v[15] = ((*CPU).registers.v[(opcode & 0x0F00) >> 8] & 1);
-        (*CPU).registers.v[(opcode & 0x0F00 >> 8)] >>= 1;
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] >>= 1;
     }
 
     else if ((opcode & 0xF00F) == 0x8007) {
@@ -147,8 +147,8 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x800E) {
         /* Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift. */
-        (*CPU).registers.v[15] = ((*CPU).registers.v[(opcode & 0x0F00 >> 8)] >> 15);
-        (*CPU).registers.v[(opcode & 0x0F00 >> 8)] <<= 1;
+        (*CPU).registers.v[15] = ((*CPU).registers.v[(opcode & 0x0F00) >> 8] >> 15);
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] <<= 1;
     }
 
     else if ((opcode & 0xF00F) == 0x9000) {
