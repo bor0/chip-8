@@ -79,22 +79,22 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x8000) {
         /* Sets VX to the value of VY. */
-        (*CPU).registers.v[(opcode & 0x0F00) >> 8] = (*CPU).registers.v[(opcode & 0x0F00) >> 4];
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] = (*CPU).registers.v[(opcode & 0x00F0) >> 4];
     }
 
     else if ((opcode & 0xF00F) == 0x8001) {
         /* Sets VX to VX or VY. */
-        (*CPU).registers.v[(opcode & 0x0F00) >> 8] |= (*CPU).registers.v[(opcode & 0x0F00) >> 4];
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] |= (*CPU).registers.v[(opcode & 0x00F0) >> 4];
     }
 
     else if ((opcode & 0xF00F) == 0x8002) {
         /* Sets VX to VX and VY. */
-        (*CPU).registers.v[(opcode & 0x0F00) >> 8] &= (*CPU).registers.v[(opcode & 0x0F00) >> 4];
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] &= (*CPU).registers.v[(opcode & 0x00F0) >> 4];
     }
 
     else if ((opcode & 0xF00F) == 0x8003) {
         /* Sets VX to VX xor VY. */
-        (*CPU).registers.v[(opcode & 0x0F00) >> 8] ^= (*CPU).registers.v[(opcode & 0x0F00) >> 4];
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] ^= (*CPU).registers.v[(opcode & 0x00F0) >> 4];
     }
 
     else if ((opcode & 0xF00F) == 0x8004) {
@@ -122,12 +122,12 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
             (*CPU).registers.v[15] = 1;
         }
 
-        (*CPU).registers.v[(opcode & 0x00F0) >> 4] -= vy;
+        (*CPU).registers.v[(opcode & 0x0F00) >> 8] -= vx;
     }
 
     else if ((opcode & 0xF00F) == 0x8006) {
         /* Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift. */
-        (*CPU).registers.v[(opcode & 0x00F0 >> 4)] = ((*CPU).registers.v[(opcode & 0x0F00 >> 8)] & 1);
+        (*CPU).registers.v[15] = ((*CPU).registers.v[(opcode & 0x0F00) >> 8] & 1);
         (*CPU).registers.v[(opcode & 0x0F00 >> 8)] >>= 1;
     }
 
@@ -147,7 +147,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x800E) {
         /* Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift. */
-        (*CPU).registers.v[(opcode & 0x00F0 >> 4)] = ((*CPU).registers.v[(opcode & 0x0F00 >> 8)] >> 15);
+        (*CPU).registers.v[15] = ((*CPU).registers.v[(opcode & 0x0F00 >> 8)] >> 15);
         (*CPU).registers.v[(opcode & 0x0F00 >> 8)] <<= 1;
     }
 
@@ -165,7 +165,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF000) == 0xB000) {
         /* Jumps to the address NNN plus V0. */
-        (*CPU).registers.PC = opcode & 0x0FFF + (*CPU).registers.v[0];
+        (*CPU).registers.PC = (opcode & 0x0FFF) + (*CPU).registers.v[0];
     }
 
     else if ((opcode & 0xF000) == 0xC000) {
@@ -201,7 +201,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xE09E) {
         /* Skips the next instruction if the key stored in VX is pressed. */
-        uint8_t vx = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
         if ((*CPU).key[vx]) {
             (*CPU).registers.PC += 2;
         }
@@ -209,7 +209,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xE0A1) {
         /* Skips the next instruction if the key stored in VX isn't pressed. */
-        uint8_t vx = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
+        uint8_t vx = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
         if (!(*CPU).key[vx]) {
             (*CPU).registers.PC += 2;
         }
@@ -239,12 +239,12 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF015) {
         /* Sets the delay timer to VX. */
-        (*CPU).delay_timer = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
+        (*CPU).delay_timer = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
     }
 
     else if ((opcode & 0xF0FF) == 0xF018) {
         /* Sets the sound timer to VX. */
-        (*CPU).sound_timer = (*CPU).registers.v[(opcode & 0xF0FF) >> 8];
+        (*CPU).sound_timer = (*CPU).registers.v[(opcode & 0x0F00) >> 8];
     }
 
     else if ((opcode & 0xF0FF) == 0xF01E) {
@@ -254,7 +254,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF029) {
         /* Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font. */
-        (*CPU).registers.I = (*CPU).memory[(*CPU).registers.v[(opcode & 0xF0FF) >> 8]];
+        (*CPU).registers.I = (*CPU).memory[(*CPU).registers.v[(opcode & 0x0F00) >> 8]];
     }
 
     else if ((opcode & 0xF0FF) == 0xF033) {
@@ -272,7 +272,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     else if ((opcode & 0xF0FF) == 0xF055) {
         /* Stores V0 to VX in CPU starting at address I. */
         uint8_t i;
-        for (i=0;i<16;i++) {
+        for (i=0;i<((opcode & 0x0F00) >> 8);i++) {
              (*CPU).memory[(*CPU).registers.I + i] = (*CPU).registers.v[i];
         }
     }
@@ -280,7 +280,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     else if ((opcode & 0xF0FF) == 0xF065) {
         /* Fills V0 to VX with values from CPU starting at address I. */
         uint8_t i;
-        for (i=0;i<16;i++) {
+        for (i=0;i<((opcode & 0x0F00) >> 8);i++) {
             (*CPU).registers.v[i] = (*CPU).memory[(*CPU).registers.I + i];
         }
     }

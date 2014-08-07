@@ -11,8 +11,6 @@ Build Steps:
 
 TODO:
 
-- Implement all opcodes
-
 - Implement gfx & sound (SDL?)
 
 - Play games!

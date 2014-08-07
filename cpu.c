@@ -58,16 +58,15 @@ void cpu_loop(struct cpu *CPU) {
         parse_opcode(CPU, opcode);
 
         if ((*CPU).draw == 1) {
-            /* do something here */
+            /* do video here */
             (*CPU).draw = 0;
         }
 
         if ((*CPU).sound_timer > 0) {
-            printf("Beep!\n");
+            /* do audio here */
             (*CPU).sound_timer--;
         }
         if ((*CPU).delay_timer > 0) {
-            printf("Delay timer");
             (*CPU).delay_timer--;
         }
 
