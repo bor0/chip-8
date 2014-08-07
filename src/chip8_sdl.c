@@ -53,7 +53,7 @@ static void _render(SDL_Surface *screen, SDL_Surface **assets, struct cpu *CPU) 
         for (j=0;j<HEIGHT;j++) {
             tmp.x = i * ASSET_WIDTH;
             tmp.y = j * ASSET_HEIGHT;
-            SDL_BlitSurface(assets[(int)(*CPU).display[i * HEIGHT + j]], NULL, screen, &tmp);
+            SDL_BlitSurface(assets[(int)CPU->display[i * HEIGHT + j]], NULL, screen, &tmp);
         }
     }
 
@@ -83,7 +83,7 @@ void cpu_SDL_loop(struct cpu *CPU) {
         Mix_PlayMusic(mus, -1);
     }*/
 
-    while (!(*CPU).halt) {
+    while (!CPU->halt) {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
             case SDL_KEYDOWN:

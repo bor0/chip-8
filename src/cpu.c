@@ -43,10 +43,10 @@ void cpu_init(FILE *t, struct cpu *CPU) {
     uint16_t i = 0;
 
     memset(CPU, '\0', sizeof(struct cpu));
-    (*CPU).registers.PC = 0x200;
+    CPU->registers.PC = 0x200;
 
     for (i=0;i<80;i++) {
-        (*CPU).memory[i] = chip8_fontset[i];
+        CPU->memory[i] = chip8_fontset[i];
     }
 
     i = 0;
@@ -54,11 +54,11 @@ void cpu_init(FILE *t, struct cpu *CPU) {
     while (!feof(t)) {
         int fH = fgetc(t);
         if (fH == -1) break;
-        (*CPU).memory[(*CPU).registers.PC + i] = fH;
+        CPU->memory[CPU->registers.PC + i] = fH;
 
         int fL = fgetc(t);
         if (fL == -1) break;
-        (*CPU).memory[(*CPU).registers.PC + i + 1] = fL;
+        CPU->memory[CPU->registers.PC + i + 1] = fL;
 
         i += 2;
     }
@@ -66,30 +66,30 @@ void cpu_init(FILE *t, struct cpu *CPU) {
 
 int cpu_cycle(struct cpu *CPU) {
     int ret = 0;
-    uint8_t fH = (*CPU).memory[(*CPU).registers.PC];
-    uint8_t fL = (*CPU).memory[(*CPU).registers.PC + 1];
+    uint8_t fH = CPU->memory[CPU->registers.PC];
+    uint8_t fL = CPU->memory[CPU->registers.PC + 1];
     uint16_t opcode = (fH << 8) | fL;
 
-    /*printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", (*CPU).registers.PC, opcode, (*CPU).registers.I, (*CPU).registers.SP);*/
+    /*printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", CPU->registers.PC, opcode, CPU->registers.I, CPU->registers.SP);*/
 
     parse_opcode(CPU, opcode);
 
-    if ((*CPU).draw == 1) {
+    if (CPU->draw == 1) {
         /* do video here */
-        (*CPU).draw = 0;
+        CPU->draw = 0;
         ret |= 1;
     }
 
-    if ((*CPU).sound_timer > 0) {
+    if (CPU->sound_timer > 0) {
         /* do audio here */
         ret |= 2;
-        (*CPU).sound_timer--;
+        CPU->sound_timer--;
     }
-    if ((*CPU).delay_timer > 0) {
-        (*CPU).delay_timer--;
+    if (CPU->delay_timer > 0) {
+        CPU->delay_timer--;
     }
 
-    (*CPU).registers.PC += 2;
+    CPU->registers.PC += 2;
 
     return ret;
 
