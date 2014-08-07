@@ -38,7 +38,7 @@ struct cpu {
     /* CHIP-8's memory addresses range from 200h to FFFh, making for 3,584 bytes. */
     uint8_t memory[0x0FFF];
 
-    /* Display resolution is 64×32 pixels, and color is monochrome. */
+    /* Display resolution is 64x32 pixels, and color is monochrome. */
     uint8_t display[2048];
 
     /* The original 1802 version allocated 48 bytes for up to 12 levels of nesting; modern implementations normally have at least 16 levels. */
@@ -58,5 +58,5 @@ struct cpu {
 };
 
 void cpu_init(FILE *, struct cpu *);
-void cpu_loop(struct cpu *);
+int cpu_cycle(struct cpu *);
 #endif

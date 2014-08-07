@@ -20,8 +20,6 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include "cpu.h"
 
-const char keymap[] = "1234qwerasdfzxcv";
-
 void keyboardUp(unsigned char, struct cpu *);
 void keyboardDown(unsigned char, struct cpu *);
 #endif

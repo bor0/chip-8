@@ -17,9 +17,12 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 */
 #include "keyboard.h"
 
+const char keymap[] = "1234qwerasdfzxcv";
+
 void keyboardDown(unsigned char key, struct cpu *CPU) {
     if (key == 27) {
-        exit(0);
+        (*CPU).halt = 1;
+        return;
     }
 
     if (key == keymap[0]) (*CPU).key[0x1] = 1;

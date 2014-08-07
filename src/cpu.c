@@ -64,30 +64,33 @@ void cpu_init(FILE *t, struct cpu *CPU) {
     }
 }
 
-void cpu_loop(struct cpu *CPU) {
-    while (!(*CPU).halt) {
-        uint8_t fH = (*CPU).memory[(*CPU).registers.PC];
-        uint8_t fL = (*CPU).memory[(*CPU).registers.PC + 1];
-        uint16_t opcode = (fH << 8) | fL;
+int cpu_cycle(struct cpu *CPU) {
+    int ret = 0;
+    uint8_t fH = (*CPU).memory[(*CPU).registers.PC];
+    uint8_t fL = (*CPU).memory[(*CPU).registers.PC + 1];
+    uint16_t opcode = (fH << 8) | fL;
 
-        printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", (*CPU).registers.PC, opcode, (*CPU).registers.I, (*CPU).registers.SP);
+    /*printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", (*CPU).registers.PC, opcode, (*CPU).registers.I, (*CPU).registers.SP);*/
 
-        parse_opcode(CPU, opcode);
+    parse_opcode(CPU, opcode);
 
-        if ((*CPU).draw == 1) {
-            /* do video here */
-            (*CPU).draw = 0;
-        }
-
-        if ((*CPU).sound_timer > 0) {
-            /* do audio here */
-            (*CPU).sound_timer--;
-        }
-        if ((*CPU).delay_timer > 0) {
-            (*CPU).delay_timer--;
-        }
-
-        (*CPU).registers.PC += 2;
-        putchar('\n');
+    if ((*CPU).draw == 1) {
+        /* do video here */
+        (*CPU).draw = 0;
+        ret |= 1;
     }
+
+    if ((*CPU).sound_timer > 0) {
+        /* do audio here */
+        ret |= 2;
+        (*CPU).sound_timer--;
+    }
+    if ((*CPU).delay_timer > 0) {
+        (*CPU).delay_timer--;
+    }
+
+    (*CPU).registers.PC += 2;
+
+    return ret;
+
 }

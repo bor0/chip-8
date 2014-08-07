@@ -18,6 +18,7 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include "opcodes.h"
 #include "cpu.h"
+#include "chip8_sdl.h"
 
 int main(int argc, char *argv[]) {
     struct cpu CPU;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
 
     fclose(f);
 
-    cpu_loop(&CPU);
+    cpu_SDL_loop(&CPU);
 
     return 0;
 }
