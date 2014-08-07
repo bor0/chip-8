@@ -5,7 +5,9 @@ CHIP-8 VM
 
 Build Steps:
 
-- gcc *.c -Wall -ansi -o chip8
+- make (to build)
+
+- make clean (to clean)
 
 
 
