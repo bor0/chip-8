@@ -32,6 +32,8 @@ void cpu_init(FILE *t, struct cpu *CPU) {
         (*CPU).memory[i] = chip8_fontset[i];
     }
 
+    i = 0;
+
     while (!feof(t)) {
         int fH = fgetc(t);
         if (fH == -1) break;
@@ -50,6 +52,8 @@ void cpu_loop(struct cpu *CPU) {
         uint8_t fH = (*CPU).memory[(*CPU).registers.PC];
         uint8_t fL = (*CPU).memory[(*CPU).registers.PC + 1];
         uint16_t opcode = (fH << 8) | fL;
+
+        printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", (*CPU).registers.PC, opcode, (*CPU).registers.I, (*CPU).registers.SP);
 
         parse_opcode(CPU, opcode);
 

@@ -11,8 +11,11 @@ struct cpu {
         /* The address register is 16 bits wide and is used with several opcodes that involve memory operations. */
         uint16_t I;
 
-        /* Program counter */
+        /* Program counter. */
         uint16_t PC;
+
+        /* Stack pointer. */
+        uint16_t SP;
     } registers;
 
     /* CHIP-8's memory addresses range from 200h to FFFh, making for 3,584 bytes. */
@@ -26,9 +29,6 @@ struct cpu {
 
     /* Key presses, 1 if pressed, 0 if not. */
     uint8_t key[16];
-
-    /* Stack pointer. */
-    uint16_t SP;
 
     /* Halt variable. */
     uint8_t halt;

@@ -7,13 +7,7 @@
 #include "cpu.h"
 #include "opcodes.h"
 
-void NI(char *str) {
-    printf(" [%s] This instruction is not implemented.", str);
-}
-
 void parse_opcode(struct cpu *CPU, uint16_t opcode) {
-    printf("[PC = %.4X] [OPCODE: %.4X] ", (*CPU).registers.PC, opcode);
-
     if (opcode == 0x00E0) {
         /* Clears the screen. */
         memset((*CPU).display, 0, sizeof((*CPU).display));
@@ -22,18 +16,18 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if (opcode == 0x00EE) {
         /* Returns from a subroutine. */
-        (*CPU).SP--;
-        if ((*CPU).SP < 0) {
+        (*CPU).registers.SP--;
+        if ((*CPU).registers.SP < 0) {
             printf("Fatal error: Stack underflow");
             (*CPU).halt = 1;
             return;
         }
-        (*CPU).registers.PC = (*CPU).stack[(*CPU).SP];
+        (*CPU).registers.PC = (*CPU).stack[(*CPU).registers.SP];
     }
 
     else if ((opcode & 0xF000) == 0x0000) {
         /* Calls RCA 1802 program at address NNN. */
-        NI("Calls RCA 1802 program at address NNN.");
+        printf("This instruction is not implemented.");
     }
 
     else if ((opcode & 0xF000) == 0x1000) {
@@ -43,12 +37,12 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF000) == 0x2000) {
         /* Calls subroutine at NNN. */
-        (*CPU).stack[(*CPU).SP] = (*CPU).registers.PC;
-        if ((*CPU).SP > sizeof((*CPU).stack)) {
+        if ((*CPU).registers.SP > sizeof((*CPU).stack)/sizeof(uint16_t)) {
             printf("Fatal error: Stack overflow");
             (*CPU).halt = 1;
         }
-        (*CPU).SP++;
+        (*CPU).stack[(*CPU).registers.SP] = (*CPU).registers.PC;
+        (*CPU).registers.SP++;
         (*CPU).registers.PC = (opcode & 0x0FFF);
     }
 
@@ -292,6 +286,6 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     }
 
     else {
-        NI("Unknown opcode");
+        printf("Unknown opcode.");
     }
 }
