@@ -50,9 +50,6 @@ struct cpu {
     /* Halt variable. */
     uint8_t halt;
 
-    /* Draw flag. */
-    uint8_t draw;
-
     /* Timers. */
     uint8_t sound_timer, delay_timer;
 };

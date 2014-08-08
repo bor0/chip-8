@@ -29,31 +29,19 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #define WIDTH 64
 #define HEIGHT 32
 
-static SDL_Surface *_img_loader(char *file) {
-    SDL_Surface *pic;
-
-    pic = IMG_Load(file);
-
-    if (pic == NULL) {
-        return NULL;
-    }
-
-    pic = SDL_DisplayFormat(pic);
-
-    return pic;
-}
-
-static void _render(SDL_Surface *screen, SDL_Surface **assets, struct cpu *CPU) {
+static void _render(SDL_Surface *screen, struct cpu *CPU) {
     SDL_Rect tmp = { 0, 0, ASSET_WIDTH, ASSET_HEIGHT };
     int i, j;
 
-    SDL_FillRect(screen, NULL, 0);
+    SDL_FillRect(screen, NULL, 0xFFFFFF);
 
     for (i=0;i<WIDTH;i++) {
         for (j=0;j<HEIGHT;j++) {
             tmp.x = i * ASSET_WIDTH;
             tmp.y = j * ASSET_HEIGHT;
-            SDL_BlitSurface(assets[(int)CPU->display[i * HEIGHT + j]], NULL, screen, &tmp);
+            if (CPU->display[i * HEIGHT + j]) {
+                SDL_FillRect(screen, &tmp, SDL_MapRGB(screen->format, 0, 0, 0));
+            }
         }
     }
 
@@ -61,27 +49,27 @@ static void _render(SDL_Surface *screen, SDL_Surface **assets, struct cpu *CPU) 
 }
 
 void cpu_SDL_loop(struct cpu *CPU) {
-    int ret;
+    int count = 0;
+    Uint32 lasttick;
     SDL_Event event;
-    SDL_Surface *screen, *assets[2];
-    /*Mix_Music *mus = NULL;*/
+    SDL_Surface *screen;
+    Mix_Chunk *beep = NULL;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) return;
 
-    SDL_WM_SetCaption("CHIP8 VM by Boro Sitnikovski", NULL);
+    SDL_WM_SetCaption("CHIP-8 VM by Boro Sitnikovski", NULL);
 
     screen = SDL_SetVideoMode(ASSET_WIDTH * WIDTH, ASSET_HEIGHT * HEIGHT, 32, SDL_DOUBLEBUF|SDL_HWSURFACE|SDL_ANYFORMAT);
 
-    assets[0] = _img_loader("square.png");
-    assets[1] = _img_loader("square2.png");
-
+    SDL_FillRect(screen, NULL, 0xFFFFFF);
     if (SDL_Init(SDL_INIT_AUDIO) < 0) return;
 
     /* setup audio mode */
-    /*if (Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 640) != -1) {
-        mus = Mix_LoadMUS("music/untzuntz.ogg");
-        Mix_PlayMusic(mus, -1);
-    }*/
+    if (Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 640) != -1) {
+        beep = Mix_LoadWAV("beep.wav");
+    }
+
+    lasttick = SDL_GetTicks();
 
     while (!CPU->halt) {
         while (SDL_PollEvent(&event)) {
@@ -100,19 +88,29 @@ void cpu_SDL_loop(struct cpu *CPU) {
             }
         }
 
-        ret = cpu_cycle(CPU);
-
-        if (ret & 1) {
-            _render(screen, assets, CPU);
-        }
-        if (ret & 2) {
-            /* _audio(); ... */
+        if (count < 12) {
+            cpu_cycle(CPU);
+            count++;
         }
 
+        if (SDL_GetTicks() - lasttick >= 1000/50) {
+            if (CPU->delay_timer > 0) CPU->delay_timer--;
+            if (CPU->sound_timer > 0) {
+                if (CPU->sound_timer == 1) {
+                    Mix_PlayChannel(-1, beep, 0);
+                }
+                CPU->sound_timer--;
+            }
+
+            lasttick = SDL_GetTicks();
+
+            _render(screen, CPU);
+            count = 0;
+        }
     }
 
-    /*if (mus) {
+    if (beep) {
         Mix_CloseAudio();
-        Mix_FreeMusic(mus);
-    }*/
+        Mix_FreeChunk(beep);
+    }
 }

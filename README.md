@@ -13,7 +13,7 @@ Build Steps:
 
 TODO:
 
-- Implement gfx & sound (SDL?)
+- Fix flicker somehow.
 
 - Play games!
 
