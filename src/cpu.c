@@ -73,6 +73,7 @@ int cpu_cycle(struct cpu *CPU) {
     /*printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", CPU->registers.PC, opcode, CPU->registers.I, CPU->registers.SP);*/
 
     parse_opcode(CPU, opcode);
+    CPU->registers.PC += 2;
 
     if (CPU->draw == 1) {
         /* do video here */
@@ -85,11 +86,10 @@ int cpu_cycle(struct cpu *CPU) {
         ret |= 2;
         CPU->sound_timer--;
     }
+
     if (CPU->delay_timer > 0) {
         CPU->delay_timer--;
     }
-
-    CPU->registers.PC += 2;
 
     return ret;
 

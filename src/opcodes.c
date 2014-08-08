@@ -39,7 +39,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
             CPU->halt = 1;
             return;
         }
-        CPU->registers.PC = CPU->stack[CPU->registers.SP];
+        CPU->registers.PC = CPU->stack[CPU->registers.SP] - 2;
     }
 
     else if ((opcode & 0xF000) == 0x0000) {
@@ -49,7 +49,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF000) == 0x1000) {
         /* Jumps to address NNN. */
-        CPU->registers.PC = opcode & 0x0FFF;
+        CPU->registers.PC = (opcode & 0x0FFF) - 2;
     }
 
     else if ((opcode & 0xF000) == 0x2000) {
@@ -60,7 +60,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         }
         CPU->stack[CPU->registers.SP] = CPU->registers.PC;
         CPU->registers.SP++;
-        CPU->registers.PC = opcode & 0x0FFF;
+        CPU->registers.PC = (opcode & 0x0FFF) - 2;
     }
 
     else if ((opcode & 0xF000) == 0x3000) {
@@ -116,10 +116,10 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x8004) {
         /* Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't. */
-        uint8_t vy = CPU->registers.v[(opcode & 0x0F00) >> 8];
-        uint8_t vx = CPU->registers.v[(opcode & 0x00F0) >> 4];
+        uint8_t vx = CPU->registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vy = CPU->registers.v[(opcode & 0x00F0) >> 4];
 
-        if (vx + vy > 0xFFFF) {
+        if (vx + vy > 0xFF) {
             CPU->registers.v[15] = 1;
         } else {
             CPU->registers.v[15] = 0;
@@ -130,16 +130,16 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x8005) {
         /* VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't. */
-        uint8_t vy = CPU->registers.v[(opcode & 0x0F00) >> 8];
-        uint8_t vx = CPU->registers.v[(opcode & 0x00F0) >> 4];
+        uint8_t vx = CPU->registers.v[(opcode & 0x0F00) >> 8];
+        uint8_t vy = CPU->registers.v[(opcode & 0x00F0) >> 4];
 
-        if (vx - vy < 0) {
-            CPU->registers.v[15] = 0;
-        } else {
+        if (vx - vy > 0) {
             CPU->registers.v[15] = 1;
+        } else {
+            CPU->registers.v[15] = 0;
         }
 
-        CPU->registers.v[(opcode & 0x0F00) >> 8] -= vx;
+        CPU->registers.v[(opcode & 0x0F00) >> 8] -= vy;
     }
 
     else if ((opcode & 0xF00F) == 0x8006) {
@@ -153,10 +153,10 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         uint8_t vx = CPU->registers.v[(opcode & 0x0F00) >> 8];
         uint8_t vy = CPU->registers.v[(opcode & 0x00F0) >> 4];
 
-        if (vy - vx < 0) {
-            CPU->registers.v[15] = 0;
-        } else {
+        if (vy - vx > 0) {
             CPU->registers.v[15] = 1;
+        } else {
+            CPU->registers.v[15] = 0;
         }
 
         CPU->registers.v[(opcode & 0x0F00) >> 8] = vy - CPU->registers.v[(opcode & 0x0F00) >> 8];
@@ -164,7 +164,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF00F) == 0x800E) {
         /* Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift. */
-        CPU->registers.v[15] = (CPU->registers.v[(opcode & 0x0F00) >> 8] >> 15);
+        CPU->registers.v[15] = (CPU->registers.v[(opcode & 0x0F00) >> 8] & 0x80);
         CPU->registers.v[(opcode & 0x0F00) >> 8] <<= 1;
     }
 
@@ -182,7 +182,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF000) == 0xB000) {
         /* Jumps to the address NNN plus V0. */
-        CPU->registers.PC = (opcode & 0x0FFF) + CPU->registers.v[0];
+        CPU->registers.PC = (opcode & 0x0FFF) + CPU->registers.v[0] - 2;
     }
 
     else if ((opcode & 0xF000) == 0xC000) {
@@ -197,19 +197,23 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         uint8_t vx = CPU->registers.v[(opcode & 0x0F00) >> 8];
         uint8_t vy = CPU->registers.v[(opcode & 0x00F0) >> 4];
         uint8_t height = opcode & 0x000F;
-        uint8_t pixel;
-        uint16_t yline, xline;
+        uint8_t spr;
+        uint16_t y, x;
 
         CPU->registers.v[15] = 0;
-        for (yline=0;yline<height;yline++) {
-            pixel = CPU->memory[CPU->registers.I + yline];
-            for (xline=0;xline<8;xline++) {
-                if ((pixel & (0x80 >> xline)) != 0) {
-                    if (CPU->display[(vx + xline + ((vy + yline) * 64))] == 1) {
+
+        for (y=0;y<height;y++) {
+            spr = CPU->memory[CPU->registers.I + y];
+            uint8_t wy = (vy + y) % 32;
+            for (x=0;x<8;x++) {
+                uint8_t wx = (vx + x) % 64;
+                if ((spr & 0x80) > 0) {
+                    if (CPU->display[wy + wx * 32] == 1) {
                         CPU->registers.v[15] = 1;
                     }
-                    CPU->display[vx + xline + ((vy + yline) * 64)] ^= 1;
+                    CPU->display[wy + wx * 32] ^= 1;
                 }
+                spr <<= 1;
             }
         }
 
@@ -234,7 +238,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF007) {
         /* Sets VX to the value of the delay timer. */
-        CPU->registers.v[(opcode & 0xF0FF) >> 8] = CPU->delay_timer;
+        CPU->registers.v[(opcode & 0x0F00) >> 8] = CPU->delay_timer;
     }
 
     else if ((opcode & 0xF0FF) == 0xF00A) {
@@ -271,7 +275,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF0FF) == 0xF029) {
         /* Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font. */
-        CPU->registers.I = CPU->memory[CPU->registers.v[(opcode & 0x0F00) >> 8]];
+        CPU->registers.I = CPU->registers.v[(opcode & 0x0F00) >> 8] * 5;
     }
 
     else if ((opcode & 0xF0FF) == 0xF033) {
@@ -281,9 +285,9 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
            place the hundreds digit in CPU at location in I, the tens digit at location I+1,
            and the ones digit at location I+2.) */
         uint8_t vx = CPU->registers.v[(opcode & 0x0F00) >> 8];
-        CPU->memory[CPU->registers.I] = vx / 100;
-        CPU->memory[CPU->registers.I] = vx / 10 % 10;
-        CPU->memory[CPU->registers.I] = vx % 10;
+        CPU->memory[CPU->registers.I] = (vx / 100) % 10;
+        CPU->memory[CPU->registers.I + 1] = (vx / 10) % 10;
+        CPU->memory[CPU->registers.I + 2] = vx % 10;
     }
 
     else if ((opcode & 0xF0FF) == 0xF055) {

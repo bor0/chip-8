@@ -68,7 +68,7 @@ void cpu_SDL_loop(struct cpu *CPU) {
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) return;
 
-    SDL_WM_SetCaption("Soko v1.0 by Boro Sitnikovski", NULL);
+    SDL_WM_SetCaption("CHIP8 VM by Boro Sitnikovski", NULL);
 
     screen = SDL_SetVideoMode(ASSET_WIDTH * WIDTH, ASSET_HEIGHT * HEIGHT, 32, SDL_DOUBLEBUF|SDL_HWSURFACE|SDL_ANYFORMAT);
 
