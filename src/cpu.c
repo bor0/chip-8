@@ -66,7 +66,7 @@ void cpu_init(FILE *t, struct cpu *CPU) {
 
     i = 0;
 
-    while (!feof(t)) {
+    while (!feof(t) && i < 0xFFF - 0x200) {
         int fH = fgetc(t);
         if (fH == -1) break;
         CPU->memory[CPU->registers.PC + i] = fH;
