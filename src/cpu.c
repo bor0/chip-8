@@ -17,6 +17,7 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "cpu.h"
 #include "opcodes.h"
 
@@ -38,6 +39,20 @@ const uint8_t chip8_fontset[80] = {
     0xF0, 0x80, 0xF0, 0x80, 0xF0, /* E */
     0xF0, 0x80, 0xF0, 0x80, 0x80  /* F */
 };
+
+void cpu_load(char *file, struct cpu *CPU) {
+    FILE *f = fopen(file, "rb");
+
+    if (!f) {
+        printf("cannot open file %s\n", file);
+        exit(0);
+    }
+
+    cpu_init(f, CPU);
+    CPU->program_name = file;
+
+    fclose(f);
+}
 
 void cpu_init(FILE *t, struct cpu *CPU) {
     uint16_t i = 0;
@@ -64,17 +79,18 @@ void cpu_init(FILE *t, struct cpu *CPU) {
     }
 }
 
-int cpu_cycle(struct cpu *CPU) {
-    int ret = 0;
+void cpu_reset(struct cpu *CPU) {
+    cpu_load(CPU->program_name, CPU);
+}
+
+uint16_t calc_opcode(struct cpu *CPU) {
     uint8_t fH = CPU->memory[CPU->registers.PC];
     uint8_t fL = CPU->memory[CPU->registers.PC + 1];
-    uint16_t opcode = (fH << 8) | fL;
+    return (fH << 8) | fL;
+}
 
-    /*printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X] ", CPU->registers.PC, opcode, CPU->registers.I, CPU->registers.SP);*/
-
+void cpu_cycle(struct cpu *CPU) {
+    uint16_t opcode = calc_opcode(CPU);
     CPU->registers.PC += 2;
     parse_opcode(CPU, opcode);
-
-    return ret;
-
 }

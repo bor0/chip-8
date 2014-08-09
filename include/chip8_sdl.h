@@ -19,5 +19,10 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #define CHIP8_SDL_H
 #include "cpu.h"
 
+#define ASSET_WIDTH 16
+#define ASSET_HEIGHT 16
+#define WIDTH 64
+#define HEIGHT 32
+
 void cpu_SDL_loop(struct cpu *);
 #endif

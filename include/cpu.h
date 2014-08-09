@@ -52,8 +52,14 @@ struct cpu {
 
     /* Timers. */
     uint8_t sound_timer, delay_timer;
+
+    /* Store program name for reset feature. */
+    char *program_name;
 };
 
+void cpu_load(char *, struct cpu *);
 void cpu_init(FILE *, struct cpu *);
-int cpu_cycle(struct cpu *);
+void cpu_reset(struct cpu *);
+uint16_t calc_opcode(struct cpu *);
+void cpu_cycle(struct cpu *);
 #endif

@@ -24,11 +24,6 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #include "cpu.h"
 #include "keyboard.h"
 
-#define ASSET_WIDTH 16
-#define ASSET_HEIGHT 16
-#define WIDTH 64
-#define HEIGHT 32
-
 static void _render(SDL_Surface *screen, struct cpu *CPU) {
     SDL_Rect tmp = { 0, 0, ASSET_WIDTH, ASSET_HEIGHT };
     int i, j;
@@ -71,6 +66,10 @@ void cpu_SDL_loop(struct cpu *CPU) {
 
     lasttick = SDL_GetTicks();
 
+    int pause = 0;
+    int sound = 1;
+    int debug = 0;
+
     while (!CPU->halt) {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -78,7 +77,19 @@ void cpu_SDL_loop(struct cpu *CPU) {
                 keyboardDown(event.key.keysym.sym, CPU);
                 break;
             case SDL_KEYUP:
-                keyboardUp(event.key.keysym.sym, CPU);
+                if (event.key.keysym.sym == 'p') {
+                    pause = !pause;
+                } else if (event.key.keysym.sym == 'm') {
+                    sound = !sound;
+                } else if (event.key.keysym.sym == '\b') {
+                    cpu_reset(CPU);
+                    count = 0;
+                    pause = 0;
+                } else if (event.key.keysym.sym == '\r') {
+                    debug = !debug;
+                } else {
+                    keyboardUp(event.key.keysym.sym, CPU);
+                }
                 break;
             case SDL_QUIT:
                 keyboardDown(27, CPU);
@@ -88,7 +99,12 @@ void cpu_SDL_loop(struct cpu *CPU) {
             }
         }
 
+        if (pause) continue;
+
         if (count < 12) {
+            if (debug) {
+                printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X]\n", CPU->registers.PC, calc_opcode(CPU), CPU->registers.I, CPU->registers.SP);
+            }
             cpu_cycle(CPU);
             count++;
         }
@@ -96,7 +112,7 @@ void cpu_SDL_loop(struct cpu *CPU) {
         if (SDL_GetTicks() - lasttick >= 1000/50) {
             if (CPU->delay_timer > 0) CPU->delay_timer--;
             if (CPU->sound_timer > 0) {
-                if (CPU->sound_timer == 1) {
+                if (CPU->sound_timer == 1 && sound) {
                     Mix_PlayChannel(-1, beep, 0);
                 }
                 CPU->sound_timer--;

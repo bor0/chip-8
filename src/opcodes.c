@@ -34,7 +34,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
         /* Returns from a subroutine. */
         CPU->registers.SP--;
         if (CPU->registers.SP < 0) {
-            printf("Fatal error: Stack underflow");
+            printf("Fatal error: Stack underflow\n");
             CPU->halt = 1;
             return;
         }
@@ -43,7 +43,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
     else if ((opcode & 0xF000) == 0x0000) {
         /* Calls RCA 1802 program at address NNN. */
-        printf("This instruction is not implemented.");
+        printf("RCA 1802 call instruction not implemented.\n");
     }
 
     else if ((opcode & 0xF000) == 0x1000) {
@@ -54,7 +54,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     else if ((opcode & 0xF000) == 0x2000) {
         /* Calls subroutine at NNN. */
         if (CPU->registers.SP > sizeof(CPU->stack)/sizeof(uint16_t)) {
-            printf("Fatal error: Stack overflow");
+            printf("Fatal error: Stack overflow\n");
             CPU->halt = 1;
         }
         CPU->stack[CPU->registers.SP] = CPU->registers.PC;
@@ -312,6 +312,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
     }
 
     else {
-        printf("Unknown opcode.");
+        printf("Unknown opcode.\n");
+        CPU->halt = 1;
     }
 }
