@@ -15,13 +15,9 @@ You should have received a copy of the GNU General Public License
 along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 
 */
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#include "cpu.h"
 #include "opcodes.h"
 
 void parse_opcode(struct cpu *CPU, uint16_t opcode) {

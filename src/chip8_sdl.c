@@ -18,7 +18,6 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
-#include <math.h>
 
 #include "chip8_sdl.h"
 #include "cpu.h"

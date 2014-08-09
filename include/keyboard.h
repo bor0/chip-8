@@ -17,7 +17,6 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
-#include <stdlib.h>
 #include "cpu.h"
 
 void keyboardUp(unsigned char, struct cpu *);
