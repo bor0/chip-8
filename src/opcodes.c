@@ -244,6 +244,7 @@ void parse_opcode(struct cpu *CPU, uint16_t opcode) {
 
         for (i=0;i<16;i++) {
             if (CPU->key[i]) {
+                CPU->key[i] = 0;
                 CPU->registers.v[(opcode & 0x0F00) >> 8] = i;
                 keypress = 1;
             }

@@ -23,8 +23,6 @@ Screenshots:
 
 TODO:
 
-- Fix keyboard speed somehow.
-
 - Fix flicker somehow.
 
 - Implement multiplayer over network?
