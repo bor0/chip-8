@@ -23,14 +23,15 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #include "cpu.h"
 #include "keyboard.h"
 
-static void _render(SDL_Surface *screen, struct cpu *CPU) {
+static void _render(SDL_Surface *screen, struct cpu *CPU)
+{
     SDL_Rect tmp = { 0, 0, ASSET_WIDTH, ASSET_HEIGHT };
     int i, j;
 
     SDL_FillRect(screen, NULL, 0xFFFFFF);
 
-    for (i=0;i<WIDTH;i++) {
-        for (j=0;j<HEIGHT;j++) {
+    for (i = 0; i < WIDTH; i++) {
+        for (j = 0; j < HEIGHT; j++) {
             tmp.x = i * ASSET_WIDTH;
             tmp.y = j * ASSET_HEIGHT;
             if (CPU->display[i * HEIGHT + j]) {
@@ -42,8 +43,9 @@ static void _render(SDL_Surface *screen, struct cpu *CPU) {
     SDL_Flip(screen);
 }
 
-void cpu_SDL_loop(struct cpu *CPU) {
-    int count = 0;
+void cpu_SDL_loop(struct cpu *CPU)
+{
+    int count = 0, pause = 0, sound = 1, debug = 0;
     Uint32 lasttick;
     SDL_Event event;
     SDL_Surface *screen;
@@ -65,15 +67,11 @@ void cpu_SDL_loop(struct cpu *CPU) {
 
     lasttick = SDL_GetTicks();
 
-    int pause = 0;
-    int sound = 1;
-    int debug = 0;
-
     while (!CPU->halt) {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
             case SDL_KEYDOWN:
-                keyboardDown(event.key.keysym.sym, CPU);
+                keyboardPress(event.key.keysym.sym, CPU, 0);
                 break;
             case SDL_KEYUP:
                 if (event.key.keysym.sym == 'p') {
@@ -87,11 +85,11 @@ void cpu_SDL_loop(struct cpu *CPU) {
                 } else if (event.key.keysym.sym == '\r') {
                     debug = !debug;
                 } else {
-                    keyboardUp(event.key.keysym.sym, CPU);
+                    keyboardPress(event.key.keysym.sym, CPU, 1);
                 }
                 break;
             case SDL_QUIT:
-                keyboardDown(27, CPU);
+                CPU->halt = 1;
                 break;
             default:
                 break;
