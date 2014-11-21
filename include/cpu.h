@@ -57,8 +57,8 @@ struct cpu {
     char *program_name;
 };
 
-void cpu_load(char *, struct cpu *);
-void cpu_init(FILE *, struct cpu *);
+void cpu_load(struct cpu *, char *);
+void cpu_init(struct cpu *, FILE *);
 void cpu_reset(struct cpu *);
 uint16_t calc_opcode(struct cpu *);
 void cpu_cycle(struct cpu *);

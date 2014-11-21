@@ -71,7 +71,7 @@ void cpu_SDL_loop(struct cpu *CPU)
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
             case SDL_KEYDOWN:
-                keyboardPress(event.key.keysym.sym, CPU, 0);
+                keyboardPress(CPU, event.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
                 if (event.key.keysym.sym == 'p') {
@@ -84,8 +84,11 @@ void cpu_SDL_loop(struct cpu *CPU)
                     pause = 0;
                 } else if (event.key.keysym.sym == '\r') {
                     debug = !debug;
-                } else {
-                    keyboardPress(event.key.keysym.sym, CPU, 1);
+                } else if (event.key.keysym.sym == 27) {
+                    CPU->halt = 1;
+                }
+                else {
+                    keyboardPress(CPU, event.key.keysym.sym, 0);
                 }
                 break;
             case SDL_QUIT:

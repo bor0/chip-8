@@ -19,6 +19,5 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #define KEYBOARD_H
 #include "cpu.h"
 
-void keyboardUp(unsigned char, struct cpu *);
-void keyboardDown(unsigned char, struct cpu *);
+void keyboardPress(struct cpu *, unsigned char, uint8_t);
 #endif

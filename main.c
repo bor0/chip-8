@@ -20,15 +20,16 @@ along with CHIP-8 VM. If not, see <http://www.gnu.org/licenses/>.
 #include "cpu.h"
 #include "chip8_sdl.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     struct cpu CPU;
 
     if (argc != 2) {
         printf("usage: %s <game file>\n", argv[0]);
-        return 0;
+        return 1;
     }
 
-    cpu_load(argv[1], &CPU);
+    cpu_load(&CPU, argv[1]);
 
     cpu_SDL_loop(&CPU);
 
