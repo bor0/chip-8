@@ -45,7 +45,7 @@ static void _render(SDL_Surface *screen, struct cpu *CPU)
 
 void cpu_SDL_loop(struct cpu *CPU)
 {
-    int count = 0, pause = 0, sound = 1, debug = 0;
+    int count = 0, pause = 0, sound = 1, debug = 0, step = 0, i, print_memory = 0;
     Uint32 lasttick;
     SDL_Event event;
     SDL_Surface *screen;
@@ -74,21 +74,37 @@ void cpu_SDL_loop(struct cpu *CPU)
                 keyboardPress(CPU, event.key.keysym.sym, 1);
                 break;
             case SDL_KEYUP:
-                if (event.key.keysym.sym == 'p') {
+                switch (event.key.keysym.sym) {
+                case SDLK_p:
                     pause = !pause;
-                } else if (event.key.keysym.sym == 'm') {
+                    break;
+                case SDLK_m:
                     sound = !sound;
-                } else if (event.key.keysym.sym == '\b') {
+                    break;
+                case SDLK_BACKSPACE:
                     cpu_reset(CPU);
                     count = 0;
                     pause = 0;
-                } else if (event.key.keysym.sym == '\r') {
-                    debug = !debug;
-                } else if (event.key.keysym.sym == 27) {
+                    break;
+                case SDLK_F8:
+                    step = 1;
+                    debug = 1;
+                    break;
+                case SDLK_F9:
+                    debug = 0;
+                    break;
+                case SDLK_F10:
+                    if (debug) step = 1;
+                    break;
+                case SDLK_BACKQUOTE:
+                    if (debug) print_memory = 1;
+                    break;
+                case SDLK_ESCAPE:
                     CPU->halt = 1;
-                }
-                else {
+                    break;
+                default:
                     keyboardPress(CPU, event.key.keysym.sym, 0);
+                    break;
                 }
                 break;
             case SDL_QUIT:
@@ -99,18 +115,44 @@ void cpu_SDL_loop(struct cpu *CPU)
             }
         }
 
-        if (pause) continue;
+        if (pause) {
+            continue;
+        }
+
+        if (debug) {
+            if (print_memory) {
+                printf("-- Printing memory contents --");
+                for (i = 0; i < sizeof(CPU->memory); i+=2) {
+                    if (i % 32 == 0) {
+                        printf("\n%.4X: ", i);
+                    }
+                    printf("%.4X ", (CPU->memory[i] << 8) | CPU->memory[i+1]);
+                }
+                printf("\n-- Printing memory contents --\n");
+                print_memory = 0;
+                continue;
+            }
+            if (!step) {
+                continue;
+            }
+            printf("%.4X: %.4X [I=%.4X] [SP=%.4X] [V0..V16=", CPU->registers.PC, calc_opcode(CPU), CPU->registers.I, CPU->registers.SP);
+            for (i = 0; i < 16; i++) {
+                printf("%.2X ", CPU->registers.v[i]);
+            }
+            printf("\b]\n");
+            step = 0;
+        }
 
         if (count < 12) {
-            if (debug) {
-                printf("0x%.4X: %.4X [I=%.4X] [SP=%.4X]\n", CPU->registers.PC, calc_opcode(CPU), CPU->registers.I, CPU->registers.SP);
-            }
             cpu_cycle(CPU);
             count++;
         }
 
-        if (SDL_GetTicks() - lasttick >= 1000/50) {
-            if (CPU->delay_timer > 0) CPU->delay_timer--;
+        if (SDL_GetTicks() - lasttick >= 1000/50) { /* every 20 ms */
+            if (CPU->delay_timer > 0) {
+                CPU->delay_timer--;
+            }
+
             if (CPU->sound_timer > 0) {
                 if (CPU->sound_timer == 1 && sound) {
                     Mix_PlayChannel(-1, beep, 0);
